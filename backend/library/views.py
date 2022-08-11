@@ -41,23 +41,27 @@ class UserDetails(APIView):
     
     # For librarian to add members
     def post(self,request):
-        serializer=UserSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'msg':'Member Created'})
+        if User.objects.filter(username=request.data['username']).exists():
+            return Response({'msg':'Member with this username already exits.'})
         else:
-            return Response({'msg':serializer.errors})
+            member = User.objects.create(
+                username=request.data['username']
+            )
+            member.set_password(request.data['password'])
+            member.save()
+            return Response({'msg':'Member Created'})
 
     # For librarian to update members
     def put(self,request):
         id=int(request.GET.get('id'))
         member=User.objects.get(pk=id)
-        serializer=UserSerializer(member,data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response({'msg':'Member Details Updated'})
+        if User.objects.filter(username=request.data['username']).exclude(pk=id).exists():
+            return Response({'msg':'Member with this username already exits.'})
         else:
-            return Response({'msg':serializer.errors})
+            member.username=request.data['username']
+            member.set_password(request.data['password'])
+            member.save()
+            return Response({'msg':'Member Created'})
 
     '''
     For librarian to remove an member or 
